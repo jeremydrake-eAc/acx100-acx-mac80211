@@ -497,7 +497,8 @@ int acx_free_mechanics(acx_device_t *adev)
 
 int acx_init_ieee80211(acx_device_t *adev, struct ieee80211_hw *hw)
 {
-	hw->flags[0] &= ~IEEE80211_HW_RX_INCLUDES_FCS;
+	/* why no ieee80211_hw_clear ? */
+	__clear_bit(IEEE80211_HW_RX_INCLUDES_FCS, hw->flags);
 	hw->queues = 1;
 	hw->wiphy->max_scan_ssids = 1;
 
@@ -525,7 +526,7 @@ int acx_init_ieee80211(acx_device_t *adev, struct ieee80211_hw *hw)
 	/* We base signal quality on winlevel approach of previous driver
 	 * TODO OW 20100615 This should into a common init code
 	 */
-	hw->flags[0] |= IEEE80211_HW_SIGNAL_UNSPEC;
+	ieee80211_hw_set(hw, SIGNAL_UNSPEC);
 	hw->max_signal = 100;
 
 	if (IS_ACX100(adev)) {
