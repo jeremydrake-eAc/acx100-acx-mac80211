@@ -62,7 +62,7 @@ void acx_op_tx(struct ieee80211_hw *hw, struct ieee80211_tx_control *control,
 #endif
 
 int acx_op_hw_scan(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-                   struct cfg80211_scan_request *req);
+                   struct ieee80211_scan_request *req);
 
 int acx_recover_hw(acx_device_t *adev);
 

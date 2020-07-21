@@ -2776,7 +2776,8 @@ void acx_irq_work(struct work_struct *work)
 		/* HOST_INT_SCAN_COMPLETE */
 		if (irqmasked & HOST_INT_SCAN_COMPLETE) {
 			if (test_bit(ACX_FLAG_SCANNING, &adev->flags)) {
-				ieee80211_scan_completed(adev->hw, false);
+				struct cfg80211_scan_info scan_info = {.aborted = false};
+				ieee80211_scan_completed(adev->hw, &scan_info);
 				log(L_INIT, "scan completed\n");
 				clear_bit(ACX_FLAG_SCANNING, &adev->flags);
 			}
@@ -3141,7 +3142,8 @@ void acx_stop(acx_device_t *adev)
 	acxmem_lock_flags;
 
 	if (test_bit(ACX_FLAG_SCANNING, &adev->flags)) {
-		ieee80211_scan_completed(adev->hw, true);
+		struct cfg80211_scan_info scan_info = {.aborted = true};
+		ieee80211_scan_completed(adev->hw, &scan_info);
 		acx_issue_cmd(adev, ACX1xx_CMD_STOP_SCAN, NULL, 0);
 		clear_bit(ACX_FLAG_SCANNING, &adev->flags);
 	}

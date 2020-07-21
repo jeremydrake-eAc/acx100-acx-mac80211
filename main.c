@@ -497,7 +497,7 @@ int acx_free_mechanics(acx_device_t *adev)
 
 int acx_init_ieee80211(acx_device_t *adev, struct ieee80211_hw *hw)
 {
-	hw->flags &= ~IEEE80211_HW_RX_INCLUDES_FCS;
+	hw->flags[0] &= ~IEEE80211_HW_RX_INCLUDES_FCS;
 	hw->queues = 1;
 	hw->wiphy->max_scan_ssids = 1;
 
@@ -525,14 +525,14 @@ int acx_init_ieee80211(acx_device_t *adev, struct ieee80211_hw *hw)
 	/* We base signal quality on winlevel approach of previous driver
 	 * TODO OW 20100615 This should into a common init code
 	 */
-	hw->flags |= IEEE80211_HW_SIGNAL_UNSPEC;
+	hw->flags[0] |= IEEE80211_HW_SIGNAL_UNSPEC;
 	hw->max_signal = 100;
 
 	if (IS_ACX100(adev)) {
-		adev->hw->wiphy->bands[IEEE80211_BAND_2GHZ] =
+		adev->hw->wiphy->bands[NL80211_BAND_2GHZ] =
 			&acx100_band_2GHz;
 	} else if (IS_ACX111(adev))
-		adev->hw->wiphy->bands[IEEE80211_BAND_2GHZ] =
+		adev->hw->wiphy->bands[NL80211_BAND_2GHZ] =
 			&acx111_band_2GHz;
 	else {
 		log(L_ANY, "Error: Unknown device");
@@ -945,7 +945,7 @@ void acx_op_configure_filter(struct ieee80211_hw *hw,
 		changed_flags, *total_flags);
 
 	/* OWI TODO: Set also FIF_PROBE_REQ ? */
-	*total_flags &= (FIF_PROMISC_IN_BSS | FIF_ALLMULTI | FIF_FCSFAIL
+	*total_flags &= (FIF_ALLMULTI | FIF_FCSFAIL
 			| FIF_CONTROL | FIF_OTHER_BSS);
 
 	logf1(L_DEBUG, "2: *total_flags=0x%08x\n", *total_flags);
@@ -1045,7 +1045,7 @@ void acx_op_tx(struct ieee80211_hw *hw, struct ieee80211_tx_control *control,
 }
 
 int acx_op_hw_scan(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-                   struct cfg80211_scan_request *req)
+                   struct ieee80211_scan_request *req)
 {
 	acx_device_t *adev = hw2adev(hw);
 	struct sk_buff *skb;
@@ -1053,9 +1053,9 @@ int acx_op_hw_scan(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
 	u8 *ssid = NULL;
 	int ret=0;
 
-	if (req->n_ssids) {
-		ssid = req->ssids[0].ssid;
-		ssid_len = req->ssids[0].ssid_len;
+	if (req->req.n_ssids) {
+		ssid = req->req.ssids[0].ssid;
+		ssid_len = req->req.ssids[0].ssid_len;
 	}
 
 	acx_sem_lock(adev);
@@ -1082,14 +1082,14 @@ int acx_op_hw_scan(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
 		goto out;
 	}
 #else
-	skb = ieee80211_probereq_get(adev->hw, adev->vif, ssid, ssid_len,
-		req->ie_len);
+	skb = ieee80211_probereq_get(adev->hw, adev->vif->addr, ssid, ssid_len,
+		req->req.ie_len);
 	if (!skb) {
 		ret = -ENOMEM;
 		goto out;
 	}
-	if (req->ie_len)
-		memcpy(skb_put(skb, req->ie_len), req->ie, req->ie_len);
+	if (req->req.ie_len)
+		memcpy(skb_put(skb, req->req.ie_len), req->req.ie, req->req.ie_len);
 #endif
 
 #else
